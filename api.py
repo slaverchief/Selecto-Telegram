@@ -35,6 +35,7 @@ class APIClient:
             raise APIException("Невалидный статус ответа от сервера")
         return res
 
+    @staticmethod
     async def selection_post(**kwargs):
         url = APIClient.__host + 'selection'
         session = aiohttp.ClientSession(headers=APIClient.__headers)
@@ -42,3 +43,43 @@ class APIClient:
         res = await resp.json()
         if not res['status'] == 'success':
             raise APIException("Невалидный статус ответа от сервера")
+
+    @staticmethod
+    async def option_get(**kwargs):
+        url = APIClient.__host + 'option'
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.get(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            raise APIException("Невалидный статус ответа от сервера")
+        return res
+
+    @staticmethod
+    async def char_get(**kwargs):
+        url = APIClient.__host + 'char'
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.get(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            raise APIException("Невалидный статус ответа от сервера")
+        return res
+
+    @staticmethod
+    async def char_post(**kwargs):
+        url = APIClient.__host + 'char'
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.post(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            raise APIException("Невалидный статус ответа от сервера")
+        return res
+
+    @staticmethod
+    async def option_char_get(**kwargs):
+        url = APIClient.__host + 'optionchar'
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.get(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            raise APIException("Невалидный статус ответа от сервера")
+        return res
