@@ -8,6 +8,30 @@ class APIClient:
     __headers = {'AccessToken': ACCESS_TOKEN}
 
     @staticmethod
+    async def base_post(extra_url, **kwargs):
+        url = APIClient.__host + extra_url
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.post(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            await session.close()
+            raise APIException("Невалидный статус ответа от сервера")
+        await session.close()
+        return res['result']
+
+    @staticmethod
+    async def base_get(extra_url, **kwargs):
+        url = APIClient.__host + extra_url
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.get(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            await session.close()
+            raise APIException("Невалидный статус ответа от сервера")
+        await session.close()
+        return res['result']
+
+    @staticmethod
     def extend_headers(extra_headers: dict):
         APIClient.__headers = APIClient.__headers | extra_headers
 
@@ -27,59 +51,32 @@ class APIClient:
 
     @staticmethod
     async def selection_get(**kwargs):
-        url = APIClient.__host + 'selection'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.get(json=kwargs, url=url)
-        res = await resp.json()
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
-        return res
+        return await APIClient.base_get('selection', **kwargs)
 
     @staticmethod
     async def selection_post(**kwargs):
-        url = APIClient.__host + 'selection'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.post(json=kwargs, url=url)
-        res = await resp.json()
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
+        return await APIClient.base_post('selection', **kwargs)
 
     @staticmethod
     async def option_get(**kwargs):
-        url = APIClient.__host + 'option'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.get(json=kwargs, url=url)
-        res = await resp.json()
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
-        return res
+        return await APIClient.base_get('option', **kwargs)
+
+    @staticmethod
+    async def option_post(**kwargs):
+        return await APIClient.base_post('option', **kwargs)
 
     @staticmethod
     async def char_get(**kwargs):
-        url = APIClient.__host + 'char'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.get(json=kwargs, url=url)
-        res = await resp.json()
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
-        return res
+        return await APIClient.base_get('char', **kwargs)
 
     @staticmethod
     async def char_post(**kwargs):
-        url = APIClient.__host + 'char'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.post(json=kwargs, url=url)
-        res = await resp.json()
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
-        return res
+        return await APIClient.base_post('char', **kwargs)
 
     @staticmethod
     async def option_char_get(**kwargs):
-        url = APIClient.__host + 'optionchar'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.get(json=kwargs, url=url)
-        res = await resp.json()
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
-        return res
+        return await APIClient.base_get('optionchar', **kwargs)
+
+    @staticmethod
+    async def option_char_post(**kwargs):
+        return await APIClient.base_post('optionchar', **kwargs)
