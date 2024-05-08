@@ -124,37 +124,34 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Option.waiting_for_option_name.state)
 
 
+# @basic_router.message(Option.waiting_for_option_name)
+# async def handler(message: types.Message, state: FSMContext):
+#     user = await get_user(message.from_user.id)
+#     await state.update_data(name=message.text)
+#     builder = InlineKeyboardBuilder()
+#     data = await state.get_data()
+#     chars = await APIClient.char_get(selection=data['selection'])
+#     for char in chars:
+#         builder.add(types.InlineKeyboardButton(text=char['name'], callback_data=f'pick_char_{char['id']}'))
+#     await message.answer(text='Выберите характеристику, с которой сопоставляете вариант выбора',
+#                          reply_markup=builder.as_markup())
+
+
+# @basic_router.callback_query(F.data.contains('pick_char_'))
+# async def handler(callback: types.CallbackQuery, state: FSMContext):
+#     user = await get_user(callback.from_user.id)
+#     await state.update_data(char_id=int(callback.data.split('_')[2]))
+#     await callback.message.answer('Введите значимость варианта в данной характеристике в сравнении с другими')
+#     await state.set_state(Option.waiting_for_option_value.state)
+
+
 @basic_router.message(Option.waiting_for_option_name)
-async def handler(message: types.Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
-    await state.update_data(name=message.text)
-    builder = InlineKeyboardBuilder()
-    data = await state.get_data()
-    chars = await APIClient.char_get(selection=data['selection'])
-    for char in chars:
-        builder.add(types.InlineKeyboardButton(text=char['name'], callback_data=f'pick_char_{char['id']}'))
-    await message.answer(text='Выберите характеристику, с которой сопоставляете вариант выбора',
-                         reply_markup=builder.as_markup())
-
-
-@basic_router.callback_query(F.data.contains('pick_char_'))
-async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
-    await state.update_data(char_id=int(callback.data.split('_')[2]))
-    await callback.message.answer('Введите значимость варианта в данной характеристике в сравнении с другими')
-    await state.set_state(Option.waiting_for_option_value.state)
-
-
-@basic_router.message(Option.waiting_for_option_value)
 async def handler(message: types.Message, state: FSMContext):
     user = await get_user(message.from_user.id)
     data = await state.get_data()
     selection = data.get('selection')
-    char = data['char_id']
-    name = data.get('name')
-    value = int(message.text)
+    name = message.text
     option = await APIClient.option_post(selection=selection, name=name)
-    await APIClient.option_char_post(char=char, option=option, value=value)
     await message.answer("Вариант выбора создан")
     await state.clear()
 
