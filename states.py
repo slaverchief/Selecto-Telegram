@@ -12,4 +12,8 @@ class Char(StatesGroup):
 
 class Option(StatesGroup):
     waiting_for_option_name = State()
+
+
+class OptionChar(StatesGroup):
     waiting_for_option_value = State()
+

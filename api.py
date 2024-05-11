@@ -13,6 +13,8 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.post(json=kwargs, url=url)
         res = await resp.json()
+        if not res.get('status'):
+            raise APIException("Ошибка на стороне сервера")
         if not res['status'] == 'success':
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
