@@ -65,8 +65,8 @@ async def handler(callback: types.CallbackQuery):
                types.InlineKeyboardButton(text='Создать вариант выбора', callback_data=f'create_option_{selection}'),
                types.InlineKeyboardButton(text='Сопоставить вариант выбора и характеристику',
                                           callback_data=f'create_optionchar_{selection}'),
-               types.InlineKeyboardButton(text='Удалить характеристику', callback_data=f'edit_char_{selection}'),
-               types.InlineKeyboardButton(text='Удалить вариант выбора', callback_data=f'edit_option_{selection}'),
+               types.InlineKeyboardButton(text='Удалить характеристику', callback_data=f'pick_to_delete_char_{selection}'),
+               types.InlineKeyboardButton(text='Удалить вариант выбора', callback_data=f'pick_to_delete_option_{selection}'),
                )
     for button in buttons:
         builder.add(button)
@@ -172,7 +172,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 async def handler(callback: types.CallbackQuery, state: FSMContext):
     user = await get_user(callback.from_user.id)
     await state.update_data(option_id=int(callback.data.split('_')[3]))
-    await callback.message.answer("Введите значимость выбранного варианта для вырбранной характеристики")
+    await callback.message.answer("Введите значимость выбранного варианта для выбранной характеристики")
     await state.set_state(OptionChar.waiting_for_option_value.state)
 
 
@@ -189,6 +189,49 @@ async def handler(message: types.Message, state: FSMContext):
 
 
 # CREATING CONNECTION
+
+# DELETEANY
+
+@basic_router.callback_query(F.data.contains('pick_to_delete_char_'))
+async def handler(callback: types.CallbackQuery, state: FSMContext):
+    user = await get_user(callback.from_user.id)
+    selection = int(callback.data.split('_')[4])
+    builder = InlineKeyboardBuilder()
+    chars = await APIClient.char_get(selection=selection)
+    for char in chars:
+        builder.add(
+            types.InlineKeyboardButton(text=char['name'], callback_data=f'delete_char_{char['id']}'))
+    await callback.message.answer(text='Выберите удаляемую характеристику',
+                                  reply_markup=builder.as_markup())
+
+
+@basic_router.callback_query(F.data.contains('pick_to_delete_option_'))
+async def handler(callback: types.CallbackQuery, state: FSMContext):
+    user = await get_user(callback.from_user.id)
+    selection = int(callback.data.split('_')[4])
+    builder = InlineKeyboardBuilder()
+    options = await APIClient.option_get(selection=selection)
+    for option in options:
+        builder.add(
+            types.InlineKeyboardButton(text=option['name'], callback_data=f'delete_option_{option['id']}'))
+    await callback.message.answer(text='Выберите удаляемый вариант выбора',
+                                  reply_markup=builder.as_markup())
+
+
+@basic_router.callback_query(F.data.contains('delete_char'))
+async def handler(callback: types.CallbackQuery, state: FSMContext):
+    user = await get_user(callback.from_user.id)
+    await APIClient.char_delete(id=int(callback.data.split('_')[2]))
+    await callback.message.answer("Характеристика удалена")
+
+
+@basic_router.callback_query(F.data.contains('delete_option'))
+async def handler(callback: types.CallbackQuery, state: FSMContext):
+    user = await get_user(callback.from_user.id)
+    await APIClient.option_delete(id=int(callback.data.split('_')[2]))
+    await callback.message.answer("Вариант выбора удален")
+
+# DELETEANY
 
 
 

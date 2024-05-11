@@ -8,7 +8,7 @@ class APIClient:
     __headers = {'AccessToken': ACCESS_TOKEN}
 
     @staticmethod
-    async def base_post(extra_url, **kwargs):
+    async def __base_post(extra_url, **kwargs):
         url = APIClient.__host + extra_url
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.post(json=kwargs, url=url)
@@ -19,10 +19,13 @@ class APIClient:
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
         await session.close()
-        return res['result']
+        try:
+            return res['result']
+        except KeyError:
+            pass
 
     @staticmethod
-    async def base_get(extra_url, **kwargs):
+    async def __base_get(extra_url, **kwargs):
         url = APIClient.__host + extra_url
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.get(json=kwargs, url=url)
@@ -31,7 +34,25 @@ class APIClient:
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
         await session.close()
-        return res['result']
+        try:
+            return res['result']
+        except KeyError:
+            pass
+
+    @staticmethod
+    async def __base_delete(extra_url, **kwargs):
+        url = APIClient.__host + extra_url
+        session = aiohttp.ClientSession(headers=APIClient.__headers)
+        resp = await session.delete(json=kwargs, url=url)
+        res = await resp.json()
+        if not res['status'] == 'success':
+            await session.close()
+            raise APIException("Невалидный статус ответа от сервера")
+        await session.close()
+        try:
+            return res['result']
+        except KeyError:
+            pass
 
     @staticmethod
     def extend_headers(extra_headers: dict):
@@ -53,32 +74,40 @@ class APIClient:
 
     @staticmethod
     async def selection_get(**kwargs):
-        return await APIClient.base_get('selection', **kwargs)
+        return await APIClient.__base_get('selection', **kwargs)
 
     @staticmethod
     async def selection_post(**kwargs):
-        return await APIClient.base_post('selection', **kwargs)
+        return await APIClient.__base_post('selection', **kwargs)
 
     @staticmethod
     async def option_get(**kwargs):
-        return await APIClient.base_get('option', **kwargs)
+        return await APIClient.__base_get('option', **kwargs)
 
     @staticmethod
     async def option_post(**kwargs):
-        return await APIClient.base_post('option', **kwargs)
+        return await APIClient.__base_post('option', **kwargs)
+
+    @staticmethod
+    async def option_delete(**kwargs):
+        return await APIClient.__base_delete('option', **kwargs)
 
     @staticmethod
     async def char_get(**kwargs):
-        return await APIClient.base_get('char', **kwargs)
+        return await APIClient.__base_get('char', **kwargs)
 
     @staticmethod
     async def char_post(**kwargs):
-        return await APIClient.base_post('char', **kwargs)
+        return await APIClient.__base_post('char', **kwargs)
+
+    @staticmethod
+    async def char_delete(**kwargs):
+        return await APIClient.__base_delete('char', **kwargs)
 
     @staticmethod
     async def option_char_get(**kwargs):
-        return await APIClient.base_get('optionchar', **kwargs)
+        return await APIClient.__base_get('optionchar', **kwargs)
 
     @staticmethod
     async def option_char_post(**kwargs):
-        return await APIClient.base_post('optionchar', **kwargs)
+        return await APIClient.__base_post('optionchar', **kwargs)
