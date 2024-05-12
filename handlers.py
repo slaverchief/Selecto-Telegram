@@ -7,9 +7,12 @@ import kb
 from api import APIClient
 from service import *
 from middlwares import CatchExceptions
+from data import DEBUG
 
 basic_router = Router()
-# basic_router.message.middleware(CatchExceptions())
+if not DEBUG:
+    basic_router.message.middleware(CatchExceptions())
+    basic_router.callback_query.middleware(CatchExceptions(True))
 
 
 @basic_router.message(Command('start'))

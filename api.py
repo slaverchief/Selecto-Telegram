@@ -13,9 +13,10 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.post(json=kwargs, url=url)
         res = await resp.json()
-        if not res.get('status'):
-            raise APIException("Ошибка на стороне сервера")
-        if not res['status'] == 'success':
+        if res['status'] == 'fail':
+            await session.close()
+            raise APIException("Произошла какая-то ошибка. Возможно неверно введены данные")
+        elif res['status'] != 'success':
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
         await session.close()
@@ -32,7 +33,7 @@ class APIClient:
         res = await resp.json()
         if res['status'] == 'fail':
             await session.close()
-            raise APIException("Произошла какая-то ошибка. Возможно неверно введенные вами данные")
+            raise APIException("Произошла какая-то ошибка. Возможно неверно введены данные")
         elif res['status'] != 'success':
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
@@ -48,7 +49,10 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.delete(json=kwargs, url=url)
         res = await resp.json()
-        if not res['status'] == 'success':
+        if res['status'] == 'fail':
+            await session.close()
+            raise APIException("Произошла какая-то ошибка. Возможно неверно введены данные")
+        elif res['status'] != 'success':
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
         await session.close()
