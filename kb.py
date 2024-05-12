@@ -7,7 +7,8 @@ from aiogram import types
 
 startkb = [
         [types.KeyboardButton(text="Создать выборку")],
-        [types.KeyboardButton(text="Редактировать выборку")]
+        [types.KeyboardButton(text="Редактировать выборку")],
+        [types.KeyboardButton(text="Произвести выборку")],
 ]
 
 

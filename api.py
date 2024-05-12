@@ -30,7 +30,10 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.get(json=kwargs, url=url)
         res = await resp.json()
-        if not res['status'] == 'success':
+        if res['status'] == 'fail':
+            await session.close()
+            raise APIException("Произошла какая-то ошибка. Возможно неверно введенные вами данные")
+        elif res['status'] != 'success':
             await session.close()
             raise APIException("Невалидный статус ответа от сервера")
         await session.close()
@@ -111,3 +114,7 @@ class APIClient:
     @staticmethod
     async def option_char_post(**kwargs):
         return await APIClient.__base_post('optionchar', **kwargs)
+
+    @staticmethod
+    async def calc(**kwargs):
+        return await APIClient.__base_get('calc', **kwargs)
