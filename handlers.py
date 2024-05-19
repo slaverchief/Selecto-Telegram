@@ -92,7 +92,7 @@ async def handler(message: types.Message, state: FSMContext):
     data = await state.get_data()
     selection = data.get('selection')
     name = data.get('name')
-    priority = int(message.text)
+    priority = float(message.text)
     await APIClient.char_post(selection=selection, name=name, priority=priority)
     await message.answer("Характеристика создана")
     text, builder = await generate_edit_sel_message(selection)
@@ -155,7 +155,6 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
         builder.add(types.InlineKeyboardButton(text=option['name'], callback_data=f'pick_option_connection_{option['id']}'))
     await callback.message.answer(text='Выберите сопоставляемый вариант выбора',
                                   reply_markup=builder.as_markup())
-    await state.set_state(OptionChar.waiting_for_option_value.state)
 
 @basic_router.callback_query(F.data.contains('pick_option_connection_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
@@ -172,7 +171,7 @@ async def handler(message: types.Message, state: FSMContext):
     char = data['char_id']
     selection = data['selection']
     option = data['option_id']
-    value = int(message.text)
+    value = float(message.text)
     await APIClient.option_char_post(char=char, option=option, value=value)
     await message.answer('Выриант выбора сопоставлен с характеристикой')
     text, builder = await generate_edit_sel_message(selection)

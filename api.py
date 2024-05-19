@@ -8,17 +8,21 @@ class APIClient:
     __headers = {'AccessToken': ACCESS_TOKEN}
 
     @staticmethod
+    async def __status_check(res, session):
+        if res['status'] == 1:
+            await session.close()
+            raise APIException(res['result'])
+        elif res['status'] == 2:
+            await session.close()
+            raise APIException("Невалидный статус ответа от сервера")
+
+    @staticmethod
     async def __base_post(extra_url, **kwargs):
         url = APIClient.__host + extra_url
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.post(json=kwargs, url=url)
         res = await resp.json()
-        if res['status'] == 'fail':
-            await session.close()
-            raise APIException("Произошла какая-то ошибка. Возможно неверно введены данные")
-        elif res['status'] != 'success':
-            await session.close()
-            raise APIException("Невалидный статус ответа от сервера")
+        await APIClient.__status_check(res, session)
         await session.close()
         try:
             return res['result']
@@ -31,12 +35,7 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.get(json=kwargs, url=url)
         res = await resp.json()
-        if res['status'] == 'fail':
-            await session.close()
-            raise APIException("Произошла какая-то ошибка. Возможно неверно введены данные")
-        elif res['status'] != 'success':
-            await session.close()
-            raise APIException("Невалидный статус ответа от сервера")
+        await APIClient.__status_check(res, session)
         await session.close()
         try:
             return res['result']
@@ -49,12 +48,7 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.delete(json=kwargs, url=url)
         res = await resp.json()
-        if res['status'] == 'fail':
-            await session.close()
-            raise APIException("Произошла какая-то ошибка. Возможно неверно введены данные")
-        elif res['status'] != 'success':
-            await session.close()
-            raise APIException("Невалидный статус ответа от сервера")
+        await APIClient.__status_check(res, session)
         await session.close()
         try:
             return res['result']
@@ -71,11 +65,8 @@ class APIClient:
         session = aiohttp.ClientSession(headers=APIClient.__headers)
         resp = await session.get(json={'auth_id': tgid}, url=url)
         res = await resp.json()
-        user = None
-        if not res['status'] == 'success':
-            raise APIException("Невалидный статус ответа от сервера")
-        else:
-            user = res['result'].get('id', None)
+        await APIClient.__status_check(res, session)
+        user = res['result']['id']
         await session.close()
         return user
 

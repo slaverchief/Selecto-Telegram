@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-
+from data import DEBUG
 from exceptions import APIException
 
 
@@ -20,9 +20,9 @@ class CatchExceptions(BaseMiddleware):
             result = await handler(event, data)
             return result
         except APIException as exc:
-            string = f'Проблема при отправлении запроса на сервер: {str(exc)}'
+            string = f'Проблема при обработке запроса сервером: {str(exc)}'
         except Exception as exc:
-            string = str(exc)
+            string = "Произошла непредвиденная ошибка"
         if self.callback:
             await event.message.answer(string)
         else:
