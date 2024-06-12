@@ -9,6 +9,7 @@ class CatchExceptions(BaseMiddleware):
 
     def __init__(self, is_callback=False):
         self.callback = is_callback
+
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
