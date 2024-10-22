@@ -1,7 +1,7 @@
 import logging
 import asyncio
 
-from aiogram import Dispatcher
+from aiogram import Dispatcher, Bot
 
 from handlers import basic_router
 from data import *
