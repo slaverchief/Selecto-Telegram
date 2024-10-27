@@ -1,6 +1,6 @@
 ## Meta-info
 
-This is a telegram bot written for the [Selecto][https://github.com/slaverchief/Selecto-Backend] backend.
+This is a telegram bot written for the [Selecto](https://github.com/slaverchief/Selecto-Backend) backend.
 
 **STACK**: **`python`**, **`aiogram`**, **`aiohttp`**
 
