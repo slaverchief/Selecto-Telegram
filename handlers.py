@@ -1,3 +1,5 @@
+import asyncio
+from yookassa import Payment
 from aiogram import types, F, Router, MagicFilter
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -17,7 +19,7 @@ if not DEBUG:
 
 @basic_router.message(Command('start'))
 async def handler(message: types.Message):
-    await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb.startkb,
         resize_keyboard=True,
@@ -25,27 +27,26 @@ async def handler(message: types.Message):
     )
     await message.answer("Что вы хотите сделать?", reply_markup=keyboard)
 
-
 @basic_router.message(F.text == "Создать выборку")
 async def handler(message: types.Message, state: FSMContext):
-    await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     await message.answer("Введите название вашей выборки")
     await state.set_state(Selection.waiting_for_name.state)
 
 
 @basic_router.message(Selection.waiting_for_name)
 async def handler(message: types.Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
-    res = await APIClient.selection_post(owner=user, name=message.text)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
+    res = await APIClient.selection_post(name=message.text)
     await message.answer("Выборка создана")
     await state.clear()
 
 
 @basic_router.message(F.text == "Редактировать выборку")
 async def handler(message: types.Message):
-    user = await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     builder = InlineKeyboardBuilder()
-    selections = await APIClient.selection_get(owner=user)
+    selections = await APIClient.selection_get()
     if not selections:
         raise Exception("У вас нет ни одной выборки, создайте хотя бы одну")
     for json in selections:
@@ -61,7 +62,7 @@ async def handler(message: types.Message):
 
 @basic_router.callback_query(F.data.contains('selection_'))
 async def handler(callback: types.CallbackQuery):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[1])
     text, builder = await generate_edit_sel_message(selection)
     await callback.message.answer(text=text, reply_markup=builder.as_markup())
@@ -71,7 +72,7 @@ async def handler(callback: types.CallbackQuery):
 
 @basic_router.callback_query(F.data.contains('create_char_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[2])
     await state.update_data(selection=selection)
     await callback.message.answer('Введите название характеристики')
@@ -80,7 +81,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.message(Char.waiting_for_char_name)
 async def handler(message: types.Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     await state.update_data(name=message.text)
     await message.answer('Введите приоритет характеристики')
     await state.set_state(Char.waiting_for_char_priority.state)
@@ -88,7 +89,7 @@ async def handler(message: types.Message, state: FSMContext):
 
 @basic_router.message(Char.waiting_for_char_priority)
 async def handler(message: types.Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     data = await state.get_data()
     selection = data.get('selection')
     name = data.get('name')
@@ -106,7 +107,7 @@ async def handler(message: types.Message, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('create_option_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[2])
     await state.update_data(selection=selection)
     await callback.message.answer('Введите название варианта выбора')
@@ -115,7 +116,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.message(Option.waiting_for_option_name)
 async def handler(message: types.Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     data = await state.get_data()
     selection = data.get('selection')
     name = message.text
@@ -132,7 +133,7 @@ async def handler(message: types.Message, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('create_optionchar_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[2])
     builder = InlineKeyboardBuilder()
     chars = await APIClient.char_get(selection=selection)
@@ -145,7 +146,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('pick_char_connection_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     await state.update_data(char_id=int(callback.data.split('_')[3]))
     data = await state.get_data()
     selection = data['selection']
@@ -158,7 +159,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('pick_option_connection_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     await state.update_data(option_id=int(callback.data.split('_')[3]))
     await callback.message.answer("Введите значимость выбранного варианта для выбранной характеристики")
     await state.set_state(OptionChar.waiting_for_option_value.state)
@@ -166,7 +167,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.message(OptionChar.waiting_for_option_value)
 async def handler(message: types.Message, state: FSMContext):
-    user = await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     data = await state.get_data()
     char = data['char_id']
     selection = data['selection']
@@ -185,7 +186,7 @@ async def handler(message: types.Message, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('pick_to_delete_char_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[4])
     builder = InlineKeyboardBuilder()
     chars = await APIClient.char_get(selection=selection)
@@ -199,7 +200,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('pick_to_delete_option_'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[4])
     builder = InlineKeyboardBuilder()
     options = await APIClient.option_get(selection=selection)
@@ -213,7 +214,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('delete_char'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     await APIClient.char_delete(id=int(callback.data.split('_')[2]))
     await callback.message.answer("Характеристика удалена")
     data = await state.get_data()
@@ -225,7 +226,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.callback_query(F.data.contains('delete_option'))
 async def handler(callback: types.CallbackQuery, state: FSMContext):
-    user = await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     await APIClient.option_delete(id=int(callback.data.split('_')[2]))
     await callback.message.answer("Вариант выбора удален")
     data = await state.get_data()
@@ -241,7 +242,7 @@ async def handler(callback: types.CallbackQuery, state: FSMContext):
 
 @basic_router.message(F.text == "Произвести выборку")
 async def handler(message: types.Message):
-    await get_user(message.from_user.id)
+    APIClient.headers = {"Authorization": str(message.from_user.id)}
     builder = InlineKeyboardBuilder()
     selections = await APIClient.selection_get()
     for selection in selections:
@@ -252,7 +253,7 @@ async def handler(message: types.Message):
 
 @basic_router.callback_query(F.data.contains('execute_'))
 async def handler(callback: types.CallbackQuery):
-    await get_user(callback.from_user.id)
+    APIClient.headers = {"Authorization": str(callback.from_user.id)}
     selection = int(callback.data.split('_')[1])
     res = await APIClient.calc(selection=selection)
     await callback.message.answer(text=f'Самый оптимальный вариант - {res}')

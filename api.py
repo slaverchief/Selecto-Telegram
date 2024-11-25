@@ -1,74 +1,50 @@
-from data import ACCESS_TOKEN, HOST
+from data import  HOST
 import aiohttp
 from exceptions import APIException
 
 
 class APIClient:
     __host = HOST+'api/'
-    __headers = {'AccessToken': ACCESS_TOKEN}
+    headers = {}
 
     @staticmethod
-    async def __status_check(res, session):
-        if res['status'] == 1:
-            await session.close()
-            raise APIException(res['result'])
-        elif res['status'] == 2:
-            await session.close()
-            raise APIException("Невалидный статус ответа от сервера")
+    async def __send_request(kwargs, url, session, request_method):
+        resp = await request_method(json=kwargs, url=url)
+        res = await APIClient.__status_check(resp, session)
+        await session.close()
+        return res.get('result')
+
+
+    @staticmethod
+    async def __status_check(resp, session):
+        json = await resp.json()
+        if resp.status != 200:
+            detail = json.get('detail')
+            if detail:
+                raise APIException(f"Ошибка: {detail}")
+            raise APIException(f'Произошла непредвиденная ошибка')
+        return json
 
     @staticmethod
     async def __base_post(extra_url, **kwargs):
         url = APIClient.__host + extra_url
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.post(json=kwargs, url=url)
-        res = await resp.json()
-        await APIClient.__status_check(res, session)
-        await session.close()
-        try:
-            return res['result']
-        except KeyError:
-            pass
+        session = aiohttp.ClientSession(headers=APIClient.headers)
+        request_res = await APIClient.__send_request(kwargs, url, session, session.post)
+        return request_res
 
     @staticmethod
     async def __base_get(extra_url, **kwargs):
         url = APIClient.__host + extra_url
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.get(json=kwargs, url=url)
-        res = await resp.json()
-        await APIClient.__status_check(res, session)
-        await session.close()
-        try:
-            return res['result']
-        except KeyError:
-            pass
+        session = aiohttp.ClientSession(headers=APIClient.headers)
+        request_res = await APIClient.__send_request(kwargs, url, session, session.get)
+        return request_res
 
     @staticmethod
     async def __base_delete(extra_url, **kwargs):
         url = APIClient.__host + extra_url
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.delete(json=kwargs, url=url)
-        res = await resp.json()
-        await APIClient.__status_check(res, session)
-        await session.close()
-        try:
-            return res['result']
-        except KeyError:
-            pass
-
-    @staticmethod
-    def extend_headers(extra_headers: dict):
-        APIClient.__headers = APIClient.__headers | extra_headers
-
-    @staticmethod
-    async def get_user_by_id(tgid):
-        url = APIClient.__host + 'user'
-        session = aiohttp.ClientSession(headers=APIClient.__headers)
-        resp = await session.get(json={'auth_id': tgid}, url=url)
-        res = await resp.json()
-        await APIClient.__status_check(res, session)
-        user = res['result']['id']
-        await session.close()
-        return user
+        session = aiohttp.ClientSession(headers=APIClient.headers)
+        request_res = await APIClient.__send_request(kwargs, url, session, session.delete)
+        return request_res
 
     @staticmethod
     async def selection_get(**kwargs):
