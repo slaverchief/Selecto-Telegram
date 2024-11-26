@@ -12,7 +12,6 @@ This is a telegram bot written for the [Selecto][https://github.com/slaverchief/
 
 - Create data.py in the working directory and create next variables there:
 	- **TOKEN** - Your telegram bot token
-	- **ACCESS_TOKEN** - Access token for the backend where requests from the bot are sent 
 	- **HOST** - Address of your backend server
 	- **DEBUG** - A value that determines whether you will log exceptions or not(1 or 0)
 
